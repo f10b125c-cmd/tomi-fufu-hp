@@ -2,26 +2,32 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #1f2430;
-  --brand-orange: #f5893a;
-  --brand-navy: #1f2430;
+  --foreground: #24313a;
+  --brand-orange: #f47b20;
+  --brand-orange-deep: #df5b0b;
+  --brand-yellow: #ffd45a;
+  --brand-cream: #fff8e9;
+  --brand-blue-deep: #087ca8;
+  --brand-navy: #24313a;
+  --brand-footer: #17232b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-brand-orange: var(--brand-orange);
+  --color-brand-orange-deep: var(--brand-orange-deep);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-cream: var(--brand-cream);
+  --color-brand-blue-deep: var(--brand-blue-deep);
   --color-brand-navy: var(--brand-navy);
+  --color-brand-footer: var(--brand-footer);
   --font-sans: var(--font-noto-sans-jp);
-  --font-display: var(--font-dm-mono);
+  --font-display: var(--font-kiwi-maru);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-}
-
-.placeholder-photo {
-  background: linear-gradient(135deg, #7fb8d9 0%, #a9d4c8 45%, #e8d9b5 100%);
 }

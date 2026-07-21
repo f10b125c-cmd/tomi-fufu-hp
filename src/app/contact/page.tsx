@@ -24,7 +24,7 @@ export default function ContactPage() {
           PR・タイアップ、SNS運用、Canva投稿制作、記事制作などのご相談を受け付けています。
         </p>
 
-        <div className="mt-10 rounded-3xl bg-[#faf7f2] p-8">
+        <div className="mt-10 rounded-3xl bg-brand-cream p-8">
           <p className="font-semibold text-brand-navy">
             LINEからもご連絡いただけます
           </p>
@@ -32,11 +32,16 @@ export default function ContactPage() {
             お得情報やブログ更新のお知らせも発信しています😊
           </p>
           <a
-            href="#"
+            href="https://line.me/ti/g2/ZNyABEt8SLF6wnlkNPysD-2JnfzAuWduvd7qOw?utm_source=invitation&utm_medium=link_copy&utm_campaign=default"
+            target="_blank"
+            rel="noopener"
             className="mt-6 inline-block rounded-full bg-[#06c755] px-8 py-3 text-sm font-semibold text-white hover:opacity-90"
           >
             LINEに参加する
           </a>
+          <p className="mt-4 text-xs text-brand-navy/50">
+            ※メールフォームは、送信先メールアドレスを設定すると利用できます。
+          </p>
         </div>
 
         <form className="mt-14 space-y-6 text-left">
@@ -44,9 +49,8 @@ export default function ContactPage() {
             <label className="text-sm font-semibold text-brand-navy">お名前</label>
             <input
               type="text"
-              disabled
-              className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-navy/50"
-              placeholder="送信先を設定してください"
+              required
+              className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-navy"
             />
           </div>
           <div>
@@ -55,19 +59,15 @@ export default function ContactPage() {
             </label>
             <input
               type="email"
-              disabled
-              className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-navy/50"
-              placeholder="送信先を設定してください"
+              required
+              className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-navy"
             />
           </div>
           <div>
             <label className="text-sm font-semibold text-brand-navy">
               お問い合わせ種別
             </label>
-            <select
-              disabled
-              className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-navy/50"
-            >
+            <select className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-navy">
               <option>一般のお問い合わせ</option>
               <option>PR・タイアップ</option>
               <option>SNS運用・投稿制作</option>
@@ -79,15 +79,17 @@ export default function ContactPage() {
               お問い合わせ内容
             </label>
             <textarea
-              disabled
+              required
               rows={5}
-              className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-navy/50"
-              placeholder="送信先を設定してください"
+              className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-navy"
             />
           </div>
-          <p className="text-xs text-brand-navy/50">
-            ※メールフォームは、送信先メールアドレスを設定すると利用できます。
-          </p>
+          <button
+            type="button"
+            className="rounded-full bg-brand-orange px-8 py-3 text-sm font-semibold text-white opacity-60"
+          >
+            送信先を設定してください
+          </button>
         </form>
       </section>
 

@@ -10,6 +10,7 @@ export default function OtokuPage() {
       eyebrow="OTOKU & HOME"
       title="お得・家計管理"
       subtitle="ポイ活・ふるさと納税・固定費の見直しなど、旅行も日常も楽しむための家計の工夫。"
+      heroVariant="yellow"
       items={[
         {
           tag: "家計管理",

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
@@ -46,25 +47,34 @@ export default function AboutPage() {
         subtitle="旅行が大好きな、4人家族です。"
       />
 
-      <section className="mx-auto max-w-3xl px-6 py-20 text-center md:px-12">
-        <p className="text-sm font-bold tracking-[0.2em] text-brand-orange">HELLO!</p>
-        <h2 className="mt-4 font-display text-2xl font-bold text-brand-navy md:text-3xl">
-          こんにちは、
-          <br />
-          とみ夫婦です。
-        </h2>
-        <div className="mt-8 space-y-5 text-left text-brand-navy/80 leading-relaxed">
-          <p>夫婦と子ども2人の4人家族。家族旅行とおいしいものが大好きです。</p>
-          <p>
-            結婚した頃は、結婚式や新婚旅行で貯金がほとんどなくなりました。そこから家計を見直し、ポイ活やお得、投資を少しずつ始めました。
-          </p>
-          <p>
-            私たちが大切にしているのは、お金を増やすことそのものではありません。家族で行きたい場所へ行き、子どもたちにいろいろな景色を見せ、思い出を増やすことです。
-          </p>
+      <section className="mx-auto grid max-w-5xl items-center gap-12 px-6 py-20 md:grid-cols-[1fr_0.85fr] md:px-12">
+        <div>
+          <p className="text-sm font-bold tracking-[0.2em] text-brand-orange">HELLO!</p>
+          <h2 className="mt-4 font-display text-2xl font-bold text-brand-navy md:text-3xl">
+            こんにちは、
+            <br />
+            とみ夫婦です。
+          </h2>
+          <div className="mt-8 space-y-5 text-brand-navy/80 leading-relaxed">
+            <p>夫婦と子ども2人の4人家族。家族旅行とおいしいものが大好きです。</p>
+            <p>
+              結婚した頃は、結婚式や新婚旅行で貯金がほとんどなくなりました。そこから家計を見直し、ポイ活やお得、投資を少しずつ始めました。
+            </p>
+            <p>
+              私たちが大切にしているのは、お金を増やすことそのものではありません。家族で行きたい場所へ行き、子どもたちにいろいろな景色を見せ、思い出を増やすことです。
+            </p>
+          </div>
         </div>
+        <Image
+          src="/images/family-path.jpg"
+          alt="木漏れ日の道で子どもを高く持ち上げる家族"
+          width={620}
+          height={620}
+          className="h-[620px] w-full rounded-[38px] object-cover shadow-sm"
+        />
       </section>
 
-      <section className="bg-[#faf7f2] px-6 py-20 md:px-12">
+      <section className="bg-brand-cream px-6 py-20 md:px-12">
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-sm font-bold tracking-[0.2em] text-brand-orange">
             OUR JOURNEY

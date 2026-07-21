@@ -10,6 +10,7 @@ export default function TravelPage() {
       eyebrow="FAMILY TRAVEL"
       title="家族旅行"
       subtitle="沖縄・ディズニー・ホテル・グルメなど、家族で楽しんだ旅の記録。"
+      heroVariant="sea"
       items={[
         {
           tag: "沖縄",

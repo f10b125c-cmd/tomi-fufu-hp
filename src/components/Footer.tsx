@@ -1,44 +1,28 @@
 import Link from "next/link";
 
-const navLinks = [
-  { href: "/about", label: "私たちについて" },
-  { href: "/travel", label: "家族旅行" },
-  { href: "/money", label: "投資・NISA" },
-  { href: "/otoku", label: "お得・家計" },
-  { href: "https://rakutoku-blog.com/", label: "ブログ" },
-];
-
 export default function Footer() {
   return (
-    <footer className="bg-brand-navy px-6 py-14 text-white md:px-12">
-      <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 text-center">
-        <div className="flex items-center gap-2 text-lg font-semibold">
-          <span className="text-xl">☀</span>
-          <span>とみ夫婦</span>
-        </div>
-        <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-white/80">
-          {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-white">
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="flex items-center gap-4">
-          <Link
-            href="#"
-            className="rounded-full bg-[#06c755] px-6 py-2.5 text-sm font-semibold hover:opacity-90"
-          >
-            LINE
-          </Link>
-          <Link
-            href="/contact"
-            className="rounded-full bg-brand-orange px-6 py-2.5 text-sm font-semibold hover:opacity-90"
-          >
-            お問い合わせ
-          </Link>
-        </div>
-        <p className="text-xs text-white/50">© {new Date().getFullYear()} とみ夫婦</p>
+    <footer className="bg-brand-footer px-6 py-14 text-center text-white">
+      <Link href="/" className="font-display text-2xl">
+        とみ夫婦 <span className="text-brand-yellow">☀</span>
+      </Link>
+      <p className="mt-3 text-[#cbd5da]">
+        投資とお得で、家族の「行きたい」を叶える。
+      </p>
+      <div className="mt-6 flex justify-center gap-6 text-sm">
+        <Link href="/about" className="hover:opacity-80">
+          私たちについて
+        </Link>
+        <Link href="/privacy" className="hover:opacity-80">
+          プライバシーポリシー
+        </Link>
+        <Link href="/contact" className="hover:opacity-80">
+          お問い合わせ
+        </Link>
       </div>
+      <small className="mt-6 block text-[#8999a2]">
+        © TOMI FUFU. All Rights Reserved.
+      </small>
     </footer>
   );
 }

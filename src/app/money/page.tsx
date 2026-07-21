@@ -10,6 +10,7 @@ export default function MoneyPage() {
       eyebrow="MONEY & NISA"
       title="投資・NISA"
       subtitle="投資初心者の我が家が続けている、NISA・積立・個別株・家計との付き合い方。"
+      heroVariant="sun"
       items={[
         {
           tag: "NISA",

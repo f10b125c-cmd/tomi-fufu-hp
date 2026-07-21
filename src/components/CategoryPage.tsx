@@ -13,17 +13,19 @@ export default function CategoryPage({
   eyebrow,
   title,
   subtitle,
+  heroVariant,
   items,
 }: {
   eyebrow: string;
   title: string;
   subtitle: string;
+  heroVariant: "sea" | "sun" | "yellow";
   items: CategoryItem[];
 }) {
   return (
     <>
       <Header />
-      <PageHero eyebrow={eyebrow} title={title} subtitle={subtitle} />
+      <PageHero eyebrow={eyebrow} title={title} subtitle={subtitle} variant={heroVariant} />
 
       <section className="px-6 py-20 text-center md:px-12">
         <p className="text-sm font-bold tracking-[0.2em] text-brand-orange">
@@ -40,9 +42,9 @@ export default function CategoryPage({
           {items.map((item) => (
             <div
               key={item.title}
-              className="placeholder-photo rounded-3xl p-8 text-left shadow-sm"
+              className="rounded-3xl border border-[#edf0f2] bg-white p-8 text-left shadow-sm"
             >
-              <p className="text-xs font-bold tracking-[0.15em] text-white/90">
+              <p className="text-xs font-bold tracking-[0.15em] text-brand-orange">
                 {item.tag}
               </p>
               <h3 className="mt-3 font-display text-xl font-bold text-brand-navy">
@@ -51,7 +53,7 @@ export default function CategoryPage({
               <p className="mt-3 text-sm text-brand-navy/70">{item.description}</p>
               <a
                 href="https://rakutoku-blog.com/"
-                className="mt-5 inline-block text-sm font-semibold text-brand-navy hover:opacity-70"
+                className="mt-5 inline-block text-sm font-semibold text-brand-blue-deep hover:opacity-70"
               >
                 ブログで読む →
               </a>
@@ -60,7 +62,7 @@ export default function CategoryPage({
         </div>
       </section>
 
-      <section className="bg-[#faf7f2] px-6 py-20 text-center md:px-12">
+      <section className="bg-brand-cream px-6 py-20 text-center md:px-12">
         <h2 className="font-display text-xl font-bold text-brand-navy md:text-2xl">
           もっと詳しく読みたい方へ
         </h2>

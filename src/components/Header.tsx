@@ -18,7 +18,7 @@ export default function Header({ transparent = false }: { transparent?: boolean 
       } flex items-center justify-between px-6 py-5 md:px-12`}
     >
       <Link href="/" className={`flex items-center gap-2 ${textColor}`}>
-        <span className="text-xl">☀</span>
+        <span className="text-xl text-brand-yellow">☀</span>
         <span className="text-lg font-semibold tracking-wide">とみ夫婦</span>
       </Link>
       <nav className={`hidden items-center gap-8 text-sm md:flex ${textColor}`}>

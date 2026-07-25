@@ -199,7 +199,13 @@ export default function Home() {
               href={card.href}
               className={`group rounded-3xl ${card.bg} p-8 text-left shadow-sm transition hover:-translate-y-2`}
             >
-              <span className="text-3xl">{card.icon}</span>
+              <span
+                className={`inline-block text-3xl ${
+                  card.icon === "✈" ? "-scale-x-100" : ""
+                }`}
+              >
+                {card.icon}
+              </span>
               <p className="mt-5 text-xs font-bold tracking-[0.15em] text-brand-navy/50">
                 {card.tag}
               </p>

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import MemoryCard from "@/components/MemoryCard";
 
 const entryCards = [
   {
@@ -64,6 +65,8 @@ const memories = [
   { src: "/images/family-path.jpg", alt: "木漏れ日の家族", tag: "FAMILY", caption: "笑顔も一緒に持ち帰る。" },
   { src: "/images/okinawa-soba.jpg", alt: "沖縄そば", tag: "GOURMET", caption: "旅の楽しみは食卓にも。" },
   { src: "/images/pineapple-glasses.jpg", alt: "パイナップルサングラス", tag: "PLAY", caption: "予定外も、いい思い出。" },
+  // ショート動画を追加する場合は video: "/videos/ファイル名.mp4" を足すだけでOK
+  // 例: { src: "/images/okinawa-beach.jpg", alt: "...", tag: "SHORT", caption: "...", video: "/videos/okinawa-trip.mp4" },
 ];
 
 export default function Home() {
@@ -234,16 +237,7 @@ export default function Home() {
         </div>
         <div className="mt-10 flex snap-x gap-6 overflow-x-auto px-6 pb-4 md:px-12">
           {memories.map((memory) => (
-            <figure
-              key={memory.tag}
-              className="relative h-[440px] w-[78vw] flex-none snap-start overflow-hidden rounded-[28px] sm:w-[380px]"
-            >
-              <Image src={memory.src} alt={memory.alt} fill className="object-cover" />
-              <figcaption className="absolute inset-x-0 bottom-0 flex flex-col bg-gradient-to-t from-black/75 to-transparent px-6 py-8">
-                <b className="text-xl tracking-[0.1em]">{memory.tag}</b>
-                <span className="mt-1 text-sm text-white/80">{memory.caption}</span>
-              </figcaption>
-            </figure>
+            <MemoryCard key={memory.tag} {...memory} />
           ))}
         </div>
       </section>

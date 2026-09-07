@@ -4,7 +4,7 @@ tags: [knowledge, SNS, Threads, マネタイズ, 占い・スピリチュアル,
 source: "Brain（supisama_uranai）https://brain-market.com/u/supisama_uranai/a/b0MTOyYjMgoTZsNWa0JXY"
 price: "¥2,980"
 saved_date: 2026-09-07
-status: 未着手
+status: Day1 進行中
 ---
 
 # スピ様式 7days 0→1マネタイズ

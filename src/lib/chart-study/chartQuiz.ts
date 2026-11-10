@@ -1,15 +1,28 @@
 import { generateFromPath, movingAverage, type Candle, type PathPoint } from "./candles";
+import { advancedScenarios } from "./chartQuizAdvanced";
+import { bollinger, macd, rsi } from "./indicators";
 
 export const VISIBLE_DAYS = 32;
 export const FUTURE_DAYS = 12;
 /** 25日移動平均線を最初から描くための助走期間（画面には出さない） */
 const WARMUP_DAYS = 25;
+/** 上級は MACD（26日＋9日）まで最初から描けるよう、助走期間を長くとる */
+const ADVANCED_WARMUP_DAYS = 45;
+
+export type QuizLevel = "basic" | "advanced";
+export const levelLabels: Record<QuizLevel, string> = { basic: "初級", advanced: "上級" };
+
+export type IndicatorKind = "bb" | "rsi" | "macd";
 
 export type Direction = "up" | "down";
 
 export type ChartQuizScenario = {
   /** 記録用。公開後は変えないこと */
   id: string;
+  /** 省略時は初級 */
+  level?: QuizLevel;
+  /** 上級で表示する指標（bb はチャートに重ねる。rsi・macd は下の欄に1つだけ） */
+  indicators?: IndicatorKind[];
   /** 答えのあとに明かすパターン名 */
   pattern: string;
   /** この後の値動き（生成データと一致するかはテストで確認する） */
@@ -35,7 +48,7 @@ export type ChartQuizScenario = {
   lessonSlug?: string;
 };
 
-export const scenarios: ChartQuizScenario[] = [
+const basicScenarios: ChartQuizScenario[] = [
   {
     id: "trend-up",
     pattern: "上昇トレンドの継続",
@@ -374,11 +387,20 @@ export const scenarios: ChartQuizScenario[] = [
   },
 ];
 
+export const scenarios: ChartQuizScenario[] = [...basicScenarios, ...advancedScenarios];
+
+export function levelOf(s: ChartQuizScenario): QuizLevel {
+  return s.level ?? "basic";
+}
+
 export type BuiltScenario = {
   scenario: ChartQuizScenario;
   candles: Candle[];
   ma5: (number | null)[];
   ma25: (number | null)[];
+  rsi: (number | null)[];
+  macd: ReturnType<typeof macd>;
+  bb: ReturnType<typeof bollinger>;
   /** 答えのあとに出す注釈（ゴールデン／デッドクロスは自動で位置を求める） */
   labels: { index: number; text: string }[];
   /** 表示最後の終値から、最後の終値までの変化率（%） */
@@ -387,22 +409,26 @@ export type BuiltScenario = {
 };
 
 export function buildScenario(s: ChartQuizScenario): BuiltScenario {
+  const warmup = levelOf(s) === "advanced" ? ADVANCED_WARMUP_DAYS : WARMUP_DAYS;
   const all = generateFromPath({
     seed: s.seed,
-    days: WARMUP_DAYS + VISIBLE_DAYS + FUTURE_DAYS,
-    points: s.path.map(([d, p]) => [d + WARMUP_DAYS, p] as PathPoint),
+    days: warmup + VISIBLE_DAYS + FUTURE_DAYS,
+    points: s.path.map(([d, p]) => [d + warmup, p] as PathPoint),
     volatility: s.volatility ?? 1.0,
-    shadows: s.shadows?.map((x) => ({ ...x, day: x.day + WARMUP_DAYS })),
-    gaps: s.gaps?.map((x) => ({ ...x, day: x.day + WARMUP_DAYS })),
+    shadows: s.shadows?.map((x) => ({ ...x, day: x.day + warmup })),
+    gaps: s.gaps?.map((x) => ({ ...x, day: x.day + warmup })),
     volumeBoost: s.volumeBoost?.map((x) => ({
       ...x,
-      from: x.from + WARMUP_DAYS,
-      to: x.to + WARMUP_DAYS,
+      from: x.from + warmup,
+      to: x.to + warmup,
     })),
   });
-  const ma5 = movingAverage(all, 5).slice(WARMUP_DAYS);
-  const ma25 = movingAverage(all, 25).slice(WARMUP_DAYS);
-  const candles = all.slice(WARMUP_DAYS);
+  const cut = <T,>(series: T[]) => series.slice(warmup);
+  const ma5 = cut(movingAverage(all, 5));
+  const ma25 = cut(movingAverage(all, 25));
+  const m = macd(all);
+  const b = bollinger(all);
+  const candles = cut(all);
 
   const labels = (s.labels ?? []).map((l) => ({ index: l.day, text: l.text }));
   if (s.showMA && s.labelCross) {
@@ -430,6 +456,9 @@ export function buildScenario(s: ChartQuizScenario): BuiltScenario {
     candles,
     ma5,
     ma25,
+    rsi: cut(rsi(all)),
+    macd: { line: cut(m.line), signal: cut(m.signal), histogram: cut(m.histogram) },
+    bb: { middle: cut(b.middle), upper: cut(b.upper), lower: cut(b.lower) },
     labels,
     changePct,
     actual: changePct >= 0 ? "up" : "down",

@@ -3,8 +3,13 @@
 import { resetProgress, useProgress } from "@/lib/chart-study/progress";
 
 export default function ProgressSummary({ lessonSlugs }: { lessonSlugs: string[] }) {
-  const { completedLessons, termQuiz, chartQuiz, tradeHistory } = useProgress();
-  const hasAny = completedLessons.length > 0 || termQuiz.answered > 0 || chartQuiz.answered > 0 || tradeHistory.length > 0;
+  const { completedLessons, termQuiz, chartQuiz, chartQuizAdvanced, tradeHistory } = useProgress();
+  const rate = (q: { answered: number; correct: number }) =>
+    q.answered > 0 ? `${Math.round((q.correct / q.answered) * 100)}%` : "—";
+  const hasAny = completedLessons.length > 0 || termQuiz.answered > 0 ||
+    chartQuiz.answered > 0 ||
+    chartQuizAdvanced.answered > 0 ||
+    tradeHistory.length > 0;
   const lastTrade = tradeHistory[0];
   const done = lessonSlugs.filter((s) => completedLessons.includes(s)).length;
   const total = lessonSlugs.length;
@@ -34,10 +39,9 @@ export default function ProgressSummary({ lessonSlugs }: { lessonSlugs: string[]
         </div>
         <div className="rounded-2xl bg-brand-cream px-2 py-3">
           <dt className="text-xs text-brand-navy/60">チャート当て 正答率</dt>
-          <dd className="mt-1 text-lg font-bold text-brand-navy">
-            {chartQuiz.answered > 0
-              ? `${Math.round((chartQuiz.correct / chartQuiz.answered) * 100)}%`
-              : "—"}
+          <dd className="mt-1 text-sm font-bold leading-snug text-brand-navy">
+            <span className="block">初級 {rate(chartQuiz)}</span>
+            <span className="block">上級 {rate(chartQuizAdvanced)}</span>
           </dd>
         </div>
         <div className="rounded-2xl bg-brand-cream px-2 py-3">

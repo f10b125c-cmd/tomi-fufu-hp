@@ -4,6 +4,7 @@ import { DOWN_COLOR, UP_COLOR } from "./colors";
 const W = 400;
 const PAD = { top: 34, right: 48, bottom: 14, left: 6 };
 const VOLUME_H = 48;
+export const INDICATOR_H = 104;
 /** 隠れていた部分のローソク足を1本ずつ出す間隔（ms） */
 const STAGGER_MS = 70;
 
@@ -12,7 +13,19 @@ export type ChartLine = {
   color: string;
   label: string;
   dashed?: boolean;
+  /** true のとき、縦軸の範囲にこの線も含める（ボリンジャーバンドなど） */
+  fitRange?: boolean;
 };
+
+/** チャートの下に出すオシレーター系の指標 */
+export type IndicatorPanel =
+  | { kind: "rsi"; values: (number | null)[] }
+  | {
+      kind: "macd";
+      line: (number | null)[];
+      signal: (number | null)[];
+      histogram: (number | null)[];
+    };
 
 export default function CandleChart({
   candles,
@@ -27,6 +40,7 @@ export default function CandleChart({
   animateFrom,
   marks = [],
   yPadding = 0.06,
+  indicator,
   ariaLabel,
 }: {
   candles: Candle[];
@@ -48,19 +62,25 @@ export default function CandleChart({
   marks?: { index: number; side: "buy" | "sell" }[];
   /** 値段の上下に取る余白（値幅に対する割合）。売買マークを出すときは広めに */
   yPadding?: number;
+  /** チャートの下に RSI・MACD を表示する（values は candles と同じ並び） */
+  indicator?: IndicatorPanel;
   ariaLabel?: string;
 }) {
   const n = candles.length;
   const totalSlots = Math.max(slots ?? n, n);
   const volumeH = showVolume ? VOLUME_H : 0;
+  const indicatorH = indicator ? INDICATOR_H : 0;
   const plotW = W - PAD.left - PAD.right;
-  const plotH = height - PAD.top - PAD.bottom - volumeH;
+  const plotH = height - PAD.top - PAD.bottom - volumeH - indicatorH;
   const slot = plotW / totalSlots;
   const bodyW = Math.min(slot * 0.62, 34);
 
   // 縦軸はローソク足と水平線に合わせる。移動平均線が大きく離れているときは、はみ出た部分を描かない
-  const rawMin = Math.min(...candles.map((c) => c.low), ...hlines.map((h) => h.price));
-  const rawMax = Math.max(...candles.map((c) => c.high), ...hlines.map((h) => h.price));
+  const fitValues = lines
+    .filter((l) => l.fitRange)
+    .flatMap((l) => l.values.slice(0, n).filter((v): v is number => v !== null));
+  const rawMin = Math.min(...candles.map((c) => c.low), ...hlines.map((h) => h.price), ...fitValues);
+  const rawMax = Math.max(...candles.map((c) => c.high), ...hlines.map((h) => h.price), ...fitValues);
   const margin = (rawMax - rawMin) * yPadding || rawMax * 0.01;
   const min = rawMin - margin;
   const max = rawMax + margin;
@@ -69,6 +89,9 @@ export default function CandleChart({
   const x = (i: number) => PAD.left + slot * (i + 0.5);
   const y = (p: number) => PAD.top + ((max - p) / (max - min)) * plotH;
   const volumeTop = PAD.top + plotH + 8;
+  const indicatorTop = PAD.top + plotH + volumeH + 14;
+  /** 区切り線・「?」の背景を、出来高・指標の欄まで伸ばす高さ */
+  const fullH = plotH + 12 + volumeH + indicatorH;
 
   const gridValues = [0.15, 0.5, 0.85].map((r) => Math.round(min + (max - min) * r));
 
@@ -82,19 +105,129 @@ export default function CandleChart({
       ? { animation: "candle-in 0.4s ease-out both", animationDelay: `${(n - animateFrom) * STAGGER_MS}ms` }
       : undefined;
 
-  function linePath(values: (number | null)[], from: number, to: number) {
+  function linePath(
+    values: (number | null)[],
+    from: number,
+    to: number,
+    yOf: (v: number) => number = y,
+    lo = min,
+    hi = max,
+  ) {
     let d = "";
     let pen = false;
     for (let i = from; i < Math.min(to, n); i++) {
       const v = values[i];
-      if (v === null || v === undefined || v < min || v > max) {
+      if (v === null || v === undefined || v < lo || v > hi) {
         pen = false;
         continue;
       }
-      d += `${pen ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`;
+      d += `${pen ? "L" : "M"}${x(i).toFixed(1)},${yOf(v).toFixed(1)}`;
       pen = true;
     }
     return d;
+  }
+
+  /** 線を「見えていた部分」と「後から出る部分」に分けて描く */
+  function splitPaths(
+    values: (number | null)[],
+    yOf: (v: number) => number,
+    lo: number,
+    hi: number,
+  ) {
+    const cut = animateFrom !== undefined ? animateFrom : n;
+    return (
+      <>
+        <path d={linePath(values, 0, cut, yOf, lo, hi)} />
+        {animateFrom !== undefined && (
+          <path d={linePath(values, Math.max(animateFrom - 1, 0), n, yOf, lo, hi)} style={afterAll} />
+        )}
+      </>
+    );
+  }
+
+  function renderIndicator() {
+    if (!indicator) return null;
+    const top = indicatorTop;
+    const h = INDICATOR_H - 18;
+    const axisLabel = (text: string, yy: number) => (
+      <text x={W - PAD.right + 6} y={yy + 4} fontSize={10} fill="#24313a" fillOpacity={0.55}>
+        {text}
+      </text>
+    );
+
+    if (indicator.kind === "rsi") {
+      const yR = (v: number) => top + ((100 - v) / 100) * h;
+      return (
+        <g>
+          <rect x={PAD.left} y={yR(70)} width={plotW} height={yR(30) - yR(70)} fill="#24313a" opacity={0.04} />
+          {[30, 70].map((v) => (
+            <line
+              key={v}
+              x1={PAD.left}
+              x2={W - PAD.right}
+              y1={yR(v)}
+              y2={yR(v)}
+              stroke="#24313a"
+              strokeOpacity={0.35}
+              strokeDasharray="3 3"
+            />
+          ))}
+          {axisLabel("70", yR(70))}
+          {axisLabel("30", yR(30))}
+          <text x={PAD.left + 2} y={top + 2} fontSize={10} fontWeight={700} fill="#24313a" fillOpacity={0.7}>
+            RSI（14）
+          </text>
+          <g fill="none" stroke="#0f8a7e" strokeWidth={1.8}>
+            {splitPaths(indicator.values, yR, 0, 100)}
+          </g>
+        </g>
+      );
+    }
+
+    // 縦の目盛りは、いま表示している範囲の値に合わせる
+    const visible = [indicator.line, indicator.signal, indicator.histogram]
+      .flatMap((series) => series.slice(0, n))
+      .filter((v): v is number => v !== null);
+    const range = Math.max(...visible.map((v) => Math.abs(v)), 1e-6) * 1.1;
+    const yM = (v: number) => top + h / 2 - (v / range) * (h / 2);
+    return (
+      <g>
+        <line
+          x1={PAD.left}
+          x2={W - PAD.right}
+          y1={yM(0)}
+          y2={yM(0)}
+          stroke="#24313a"
+          strokeOpacity={0.35}
+        />
+        {axisLabel("0", yM(0))}
+        <text x={PAD.left + 2} y={top + 2} fontSize={10} fontWeight={700} fill="#24313a" fillOpacity={0.7}>
+          MACD（12・26・9）
+          <tspan fill="#0f8a7e"> ━ MACD</tspan>
+          <tspan fill="#c2410c"> ┅ シグナル</tspan>
+        </text>
+        {indicator.histogram.slice(0, n).map((v, i) =>
+          v === null ? null : (
+            <rect
+              key={`h${i}`}
+              x={x(i) - bodyW / 2}
+              y={Math.min(yM(0), yM(v))}
+              width={bodyW}
+              height={Math.abs(yM(v) - yM(0))}
+              fill={v >= 0 ? UP_COLOR : DOWN_COLOR}
+              fillOpacity={0.3}
+              style={appear(i)}
+            />
+          ),
+        )}
+        <g fill="none" stroke="#0f8a7e" strokeWidth={1.8}>
+          {splitPaths(indicator.line, yM, -Infinity, Infinity)}
+        </g>
+        <g fill="none" stroke="#c2410c" strokeWidth={1.5} strokeDasharray="4 3">
+          {splitPaths(indicator.signal, yM, -Infinity, Infinity)}
+        </g>
+      </g>
+    );
   }
 
   return (
@@ -112,7 +245,7 @@ export default function CandleChart({
           height={plotH + 12}
           rx={6}
           fill="var(--brand-yellow)"
-          opacity={0.35}
+          fillOpacity={0.35}
           style={animated(highlight.from) ? afterAll : undefined}
         />
       )}
@@ -125,7 +258,7 @@ export default function CandleChart({
                 x={PAD.left + slot * divider}
                 y={PAD.top - 6}
                 width={slot * (totalSlots - divider)}
-                height={plotH + 12 + volumeH}
+                height={fullH}
                 rx={6}
                 fill="#24313a"
                 opacity={0.05}
@@ -147,7 +280,7 @@ export default function CandleChart({
             x1={PAD.left + slot * divider}
             x2={PAD.left + slot * divider}
             y1={PAD.top - 10}
-            y2={PAD.top + plotH + 6 + volumeH}
+            y2={PAD.top - 6 + fullH}
             stroke="#24313a"
             strokeOpacity={0.45}
             strokeDasharray="4 3"
@@ -209,7 +342,7 @@ export default function CandleChart({
               width={bodyW}
               height={h}
               fill="#24313a"
-              opacity={0.22}
+              fillOpacity={0.22}
               style={appear(i)}
             />
           );
@@ -243,10 +376,7 @@ export default function CandleChart({
 
       {lines.map((l) => (
         <g key={l.label} fill="none" stroke={l.color} strokeWidth={2} strokeDasharray={l.dashed ? "5 3" : undefined}>
-          <path d={linePath(l.values, 0, animateFrom !== undefined ? animateFrom : n)} />
-          {animateFrom !== undefined && (
-            <path d={linePath(l.values, Math.max(animateFrom - 1, 0), n)} style={afterAll} />
-          )}
+          {splitPaths(l.values, y, min, max)}
         </g>
       ))}
 
@@ -280,7 +410,7 @@ export default function CandleChart({
       {lines.length > 0 && (
         <g fontSize={11} fontWeight={700}>
           {lines.map((l, i) => (
-            <g key={l.label} transform={`translate(${PAD.left + 4 + i * 74}, 10)`}>
+            <g key={l.label} transform={`translate(${PAD.left + 4 + i * 82}, 10)`}>
               <line
                 x1={0}
                 x2={18}
@@ -297,6 +427,8 @@ export default function CandleChart({
           ))}
         </g>
       )}
+
+      {indicator && renderIndicator()}
 
       {labels.map((label) => {
         const c = candles[label.index];

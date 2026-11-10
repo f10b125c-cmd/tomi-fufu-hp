@@ -19,6 +19,10 @@ export type Progress = {
     answered: number;
     correct: number;
   };
+  chartQuizAdvanced: {
+    answered: number;
+    correct: number;
+  };
   /** 仮想トレードの成績（新しい順、最大 MAX_TRADE_HISTORY 件） */
   tradeHistory: TradeRecord[];
 };
@@ -39,6 +43,7 @@ const EMPTY: Progress = {
   completedLessons: [],
   termQuiz: { wrongIds: [], answered: 0, correct: 0 },
   chartQuiz: { answered: 0, correct: 0 },
+  chartQuizAdvanced: { answered: 0, correct: 0 },
   tradeHistory: [],
 };
 
@@ -86,6 +91,7 @@ function getSnapshot(): Progress {
     const parsed = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
     const quiz = (parsed.termQuiz ?? {}) as Record<string, unknown>;
     const chart = (parsed.chartQuiz ?? {}) as Record<string, unknown>;
+    const chartAdv = (parsed.chartQuizAdvanced ?? {}) as Record<string, unknown>;
     cachedValue = {
       completedLessons: stringArray(parsed.completedLessons),
       termQuiz: {
@@ -96,6 +102,10 @@ function getSnapshot(): Progress {
       chartQuiz: {
         answered: count(chart.answered),
         correct: count(chart.correct),
+      },
+      chartQuizAdvanced: {
+        answered: count(chartAdv.answered),
+        correct: count(chartAdv.correct),
       },
       tradeHistory: tradeRecords(parsed.tradeHistory),
     };
@@ -154,13 +164,14 @@ export function recordTermAnswer(id: string, correct: boolean) {
   });
 }
 
-export function recordChartAnswer(correct: boolean) {
+export function recordChartAnswer(correct: boolean, level: "basic" | "advanced" = "basic") {
   const current = getSnapshot();
+  const key = level === "advanced" ? "chartQuizAdvanced" : "chartQuiz";
   write({
     ...current,
-    chartQuiz: {
-      answered: current.chartQuiz.answered + 1,
-      correct: current.chartQuiz.correct + (correct ? 1 : 0),
+    [key]: {
+      answered: current[key].answered + 1,
+      correct: current[key].correct + (correct ? 1 : 0),
     },
   });
 }

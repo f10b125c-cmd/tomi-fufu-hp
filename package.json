@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "verify:quiz": "tsx scripts/verify-chart-quiz.ts",
+    "gen:quiz": "tsx scripts/generate-quiz-variants.ts",
+    "verify:lessons": "tsx scripts/verify-lessons.ts",
+    "verify": "npm run verify:quiz && npm run verify:lessons"
   },
   "dependencies": {
     "next": "16.2.10",
@@ -21,6 +25,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

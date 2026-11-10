@@ -1,9 +1,15 @@
 import Link from "next/link";
+import MobileMenu, { type MenuLink } from "./MobileMenu";
 
-const navLinks = [
+const navLinks: MenuLink[] = [
   { href: "/about", label: "私たちについて" },
   { href: "/travel", label: "家族旅行" },
-  { href: "/money", label: "投資・NISA" },
+  {
+    href: "/money",
+    label: "投資・NISA",
+    // スマホのメニューでは、親の下に表示する
+    children: [{ href: "/money/chart-study", label: "株価チャート学習" }],
+  },
   { href: "/otoku", label: "お得・家計" },
   { href: "https://rakutoku-blog.com/", label: "ブログ" },
 ];
@@ -15,7 +21,7 @@ export default function Header({ transparent = false }: { transparent?: boolean 
     <header
       className={`${
         transparent ? "absolute top-0 left-0 right-0 z-30" : "relative bg-white"
-      } flex items-center justify-between px-6 py-5 md:px-12`}
+      } flex items-center justify-between gap-2 px-4 py-4 sm:px-6 md:px-12 md:py-5`}
     >
       <Link href="/" className={`flex items-center gap-2 ${textColor}`}>
         <span className="text-xl text-brand-yellow">☀</span>
@@ -28,12 +34,15 @@ export default function Header({ transparent = false }: { transparent?: boolean 
           </Link>
         ))}
       </nav>
-      <Link
-        href="/contact"
-        className="rounded-full bg-brand-orange px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
-      >
-        お問い合わせ
-      </Link>
+      <div className="flex items-center gap-1">
+        <Link
+          href="/contact"
+          className="rounded-full bg-brand-orange px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 md:px-5"
+        >
+          お問い合わせ
+        </Link>
+        <MobileMenu links={navLinks} light={transparent} />
+      </div>
     </header>
   );
 }

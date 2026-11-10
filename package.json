@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "verify:quiz": "tsx scripts/verify-chart-quiz.ts",
-    "gen:quiz": "tsx scripts/generate-quiz-variants.ts"
+    "gen:quiz": "tsx scripts/generate-quiz-variants.ts",
+    "verify:lessons": "tsx scripts/verify-lessons.ts",
+    "verify": "npm run verify:quiz && npm run verify:lessons"
   },
   "dependencies": {
     "next": "16.2.10",

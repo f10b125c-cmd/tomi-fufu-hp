@@ -316,18 +316,6 @@ export default function CandleChart({
             strokeWidth={1.5}
             strokeDasharray="6 4"
           />
-          <text
-            x={PAD.left + 4}
-            y={y(h.price) - 5}
-            fontSize={12}
-            fontWeight={700}
-            fill="var(--brand-orange-deep)"
-            stroke="#ffffff"
-            strokeWidth={3}
-            paintOrder="stroke"
-          >
-            {h.label}
-          </text>
         </g>
       ))}
 
@@ -429,6 +417,24 @@ export default function CandleChart({
       )}
 
       {indicator && renderIndicator()}
+
+      {/* 水平線の名前は、ローソク足に隠れないよう最後に描く */}
+      {hlines.map((h) => (
+        <g key={`${h.label}-text`} style={afterAll}>
+          <text
+            x={PAD.left + 4}
+            y={y(h.price) - 5}
+            fontSize={12}
+            fontWeight={700}
+            fill="var(--brand-orange-deep)"
+            stroke="#ffffff"
+            strokeWidth={3}
+            paintOrder="stroke"
+          >
+            {h.label}
+          </text>
+        </g>
+      ))}
 
       {labels.map((label) => {
         const c = candles[label.index];

@@ -18,7 +18,8 @@ import {
 } from "@/lib/chart-study/chartQuiz";
 import { getLesson, isAvailable } from "@/lib/chart-study/lessons";
 import { recordChartAnswer, useProgress } from "@/lib/chart-study/progress";
-import CandleChart, { INDICATOR_H, type ChartLine, type IndicatorPanel } from "./CandleChart";
+import { ICHIMOKU_SHIFT } from "@/lib/chart-study/indicators";
+import CandleChart, { INDICATOR_H, type ChartBand, type ChartLine, type IndicatorPanel } from "./CandleChart";
 import { DOWN_COLOR, UP_COLOR } from "./colors";
 import { buttonGhost, buttonPrimary } from "./QuizView";
 
@@ -26,13 +27,21 @@ const SET_SIZE = 5;
 const MA5_COLOR = "#f47b20";
 const MA25_COLOR = "#7b5ea7";
 const BB_COLOR = "#0f8a7e";
+/** 一目均衡表の色 */
+const ICHIMOKU = {
+  tenkan: "#f47b20",
+  kijun: "#7b5ea7",
+  chikou: "#0f8a7e",
+  cloudUp: "#e8a33d",
+  cloudDown: "#5b6f9e",
+};
 
 /** 1セットにまぜる「パターン通りにならない問題」の数 */
 const TRICKY_PER_SET: Record<QuizLevel, number> = { basic: 1, advanced: 2 };
 
 const levelDescriptions: Record<QuizLevel, string> = {
   basic: "トレンド・ダブルボトム・ゴールデンクロスなど、基本のパターン",
-  advanced: "RSI・MACD・ボリンジャーバンド、三角持ち合いなどの難しい形、サインの組み合わせ",
+  advanced: "RSI・MACD・ボリンジャーバンド・一目均衡表、三角持ち合いなどの難しい形、サインの組み合わせ",
 };
 
 /** 指標のかんたん解説（上級の問題で、答える前に読める） */
@@ -44,6 +53,10 @@ const indicatorHelp: Record<IndicatorKind, { title: string; body: string }> = {
   macd: {
     title: "MACD ってなに？",
     body: "短い期間（12日）と長い期間（26日）の平均の差で、値動きの「勢い」を見る指標です。実線の MACD が点線のシグナルを下から上に抜けると上向き、上から下に抜けると下向きのサインとされます。棒グラフは2本の線の差です。",
+  },
+  ichimoku: {
+    title: "一目均衡表ってなに？",
+    body: "日本で生まれた指標で、5本の線で値動きを「ひと目」で見ます。転換線（過去9日の高値と安値の真ん中）、基準線（過去26日の真ん中）、雲（先行スパン1・2のあいだ。今の値動きから計算して26日先に描く）、遅行スパン（今日の終値を26日前に描く）。株価が雲の上なら強く、下なら弱い状態とされ、雲は支えや抵抗にもなります。「転換線が基準線の上」「株価が雲の上」「遅行スパンが26日前の株価の上」の3つがそろうと「三役好転」と呼ばれる強いサインです。",
   },
   bb: {
     title: "ボリンジャーバンドってなに？",
@@ -272,6 +285,20 @@ function PlayView({
           { values: ma25, color: MA25_COLOR, label: "25日線", dashed: true },
         ]
       : []),
+    ...(indicators.includes("ichimoku")
+      ? [
+          { values: built.ichimoku.tenkan, color: ICHIMOKU.tenkan, label: "転換線" },
+          { values: built.ichimoku.kijun, color: ICHIMOKU.kijun, label: "基準線", dashed: true },
+          {
+            // 遅行スパン：今日の終値を26日前（25本前）に描く。まだ見えていない日の終値は使わない
+            values: shown.map((_, i) =>
+              i + ICHIMOKU_SHIFT < shown.length ? shown[i + ICHIMOKU_SHIFT].close : null,
+            ),
+            color: ICHIMOKU.chikou,
+            label: "遅行スパン",
+          },
+        ]
+      : []),
     ...(indicators.includes("bb")
       ? [
           { values: built.bb.upper, color: BB_COLOR, label: "+2σ", dashed: true, fitRange: true },
@@ -280,6 +307,17 @@ function PlayView({
         ]
       : []),
   ];
+  const bands: ChartBand[] = indicators.includes("ichimoku")
+    ? [
+        {
+          a: built.ichimoku.span1,
+          b: built.ichimoku.span2,
+          label: "雲",
+          colorUp: ICHIMOKU.cloudUp,
+          colorDown: ICHIMOKU.cloudDown,
+        },
+      ]
+    : [];
   const panel: IndicatorPanel | undefined = indicators.includes("rsi")
     ? { kind: "rsi", values: built.rsi.slice(0, shown.length) }
     : indicators.includes("macd")
@@ -329,6 +367,7 @@ function PlayView({
           slots={VISIBLE_DAYS + FUTURE_DAYS}
           height={chartHeight}
           indicator={panel}
+          bands={bands.map((band) => ({ ...band, a: band.a.slice(0, shown.length), b: band.b.slice(0, shown.length) }))}
           lines={lines.map((l) => ({ ...l, values: l.values.slice(0, shown.length) }))}
           showVolume={scenario.showVolume}
           divider={VISIBLE_DAYS}

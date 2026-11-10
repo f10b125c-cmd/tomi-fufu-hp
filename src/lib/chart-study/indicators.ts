@@ -91,3 +91,42 @@ export function bollinger(candles: Candle[], period = 20, width = 2) {
   }
   return { middle, upper, lower };
 }
+
+/**
+ * 一目均衡表で、先行スパン・遅行スパンをずらす本数。
+ * 「26日先（後）」は今日を1日目として数えるので、ずらすのは25本。
+ */
+export const ICHIMOKU_SHIFT = 25;
+
+/** 過去 period 日の高値と安値の真ん中 */
+function midpoint(candles: Candle[], period: number): Series {
+  return candles.map((_, i) => {
+    if (i < period - 1) return null;
+    const slice = candles.slice(i - period + 1, i + 1);
+    return (Math.max(...slice.map((c) => c.high)) + Math.min(...slice.map((c) => c.low))) / 2;
+  });
+}
+
+/**
+ * 一目均衡表（9・26・52）。
+ * - 転換線：過去9日の高値と安値の真ん中
+ * - 基準線：過去26日の高値と安値の真ん中
+ * - 先行スパン1：(転換線＋基準線)÷2 を26日先に
+ * - 先行スパン2：過去52日の高値と安値の真ん中を26日先に
+ * 先行スパン1・2 の値は「その日に表示される値」（＝25本前に計算した値）として返す。
+ * 遅行スパン（今日の終値を26日前に表示）は、表示範囲に合わせて描く側で作る。
+ */
+export function ichimoku(candles: Candle[]) {
+  const tenkan = midpoint(candles, 9);
+  const kijun = midpoint(candles, 26);
+  const base2 = midpoint(candles, 52);
+  const span1: Series = candles.map((_, i) => {
+    const j = i - ICHIMOKU_SHIFT;
+    return j >= 0 && tenkan[j] !== null && kijun[j] !== null ? (tenkan[j]! + kijun[j]!) / 2 : null;
+  });
+  const span2: Series = candles.map((_, i) => {
+    const j = i - ICHIMOKU_SHIFT;
+    return j >= 0 ? base2[j] : null;
+  });
+  return { tenkan, kijun, span1, span2 };
+}

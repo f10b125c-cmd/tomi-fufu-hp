@@ -35,10 +35,11 @@ const modes: {
     ready: true,
   },
   {
+    href: "/money/chart-study/quiz/chart",
     step: "STEP 3",
     title: "チャート当てクイズ",
     description: "途中までのチャートを見て「この後上がる？下がる？」を予想します。",
-    ready: false,
+    ready: true,
   },
   {
     step: "STEP 4",

@@ -3,8 +3,8 @@
 import { resetProgress, useProgress } from "@/lib/chart-study/progress";
 
 export default function ProgressSummary({ lessonSlugs }: { lessonSlugs: string[] }) {
-  const { completedLessons, termQuiz } = useProgress();
-  const hasAny = completedLessons.length > 0 || termQuiz.answered > 0;
+  const { completedLessons, termQuiz, chartQuiz } = useProgress();
+  const hasAny = completedLessons.length > 0 || termQuiz.answered > 0 || chartQuiz.answered > 0;
   const done = lessonSlugs.filter((s) => completedLessons.includes(s)).length;
   const total = lessonSlugs.length;
 
@@ -22,8 +22,8 @@ export default function ProgressSummary({ lessonSlugs }: { lessonSlugs: string[]
           style={{ width: `${total ? (done / total) * 100 : 0}%` }}
         />
       </div>
-      <dl className="mt-4 grid grid-cols-2 gap-3 text-center">
-        <div className="rounded-2xl bg-brand-cream px-3 py-3">
+      <dl className="mt-4 grid grid-cols-3 gap-2 text-center sm:gap-3">
+        <div className="rounded-2xl bg-brand-cream px-2 py-3">
           <dt className="text-xs text-brand-navy/60">用語クイズ 正答率</dt>
           <dd className="mt-1 text-lg font-bold text-brand-navy">
             {termQuiz.answered > 0
@@ -31,7 +31,15 @@ export default function ProgressSummary({ lessonSlugs }: { lessonSlugs: string[]
               : "—"}
           </dd>
         </div>
-        <div className="rounded-2xl bg-brand-cream px-3 py-3">
+        <div className="rounded-2xl bg-brand-cream px-2 py-3">
+          <dt className="text-xs text-brand-navy/60">チャート当て 正答率</dt>
+          <dd className="mt-1 text-lg font-bold text-brand-navy">
+            {chartQuiz.answered > 0
+              ? `${Math.round((chartQuiz.correct / chartQuiz.answered) * 100)}%`
+              : "—"}
+          </dd>
+        </div>
+        <div className="rounded-2xl bg-brand-cream px-2 py-3">
           <dt className="text-xs text-brand-navy/60">復習待ちの用語</dt>
           <dd className="mt-1 text-lg font-bold text-brand-navy">{termQuiz.wrongIds.length}問</dd>
         </div>

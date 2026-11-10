@@ -15,12 +15,17 @@ export type Progress = {
     answered: number;
     correct: number;
   };
+  chartQuiz: {
+    answered: number;
+    correct: number;
+  };
 };
 
 const STORAGE_KEY = "tomifufu-chart-study:v1";
 const EMPTY: Progress = {
   completedLessons: [],
   termQuiz: { wrongIds: [], answered: 0, correct: 0 },
+  chartQuiz: { answered: 0, correct: 0 },
 };
 
 function stringArray(value: unknown): string[] {
@@ -50,12 +55,17 @@ function getSnapshot(): Progress {
   try {
     const parsed = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
     const quiz = (parsed.termQuiz ?? {}) as Record<string, unknown>;
+    const chart = (parsed.chartQuiz ?? {}) as Record<string, unknown>;
     cachedValue = {
       completedLessons: stringArray(parsed.completedLessons),
       termQuiz: {
         wrongIds: stringArray(quiz.wrongIds),
         answered: count(quiz.answered),
         correct: count(quiz.correct),
+      },
+      chartQuiz: {
+        answered: count(chart.answered),
+        correct: count(chart.correct),
       },
     };
   } catch {
@@ -109,6 +119,17 @@ export function recordTermAnswer(id: string, correct: boolean) {
       wrongIds: correct ? others : [...others, id],
       answered: current.termQuiz.answered + 1,
       correct: current.termQuiz.correct + (correct ? 1 : 0),
+    },
+  });
+}
+
+export function recordChartAnswer(correct: boolean) {
+  const current = getSnapshot();
+  write({
+    ...current,
+    chartQuiz: {
+      answered: current.chartQuiz.answered + 1,
+      correct: current.chartQuiz.correct + (correct ? 1 : 0),
     },
   });
 }

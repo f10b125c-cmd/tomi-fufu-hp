@@ -25,6 +25,8 @@ export default function CandleChart({
   showVolume = false,
   divider,
   animateFrom,
+  marks = [],
+  yPadding = 0.06,
   ariaLabel,
 }: {
   candles: Candle[];
@@ -42,6 +44,10 @@ export default function CandleChart({
   divider?: number;
   /** この本数目以降をアニメーションで順に表示する */
   animateFrom?: number;
+  /** 売買マーク（買い＝ローソク足の下に▲、売り＝上に▼） */
+  marks?: { index: number; side: "buy" | "sell" }[];
+  /** 値段の上下に取る余白（値幅に対する割合）。売買マークを出すときは広めに */
+  yPadding?: number;
   ariaLabel?: string;
 }) {
   const n = candles.length;
@@ -52,10 +58,10 @@ export default function CandleChart({
   const slot = plotW / totalSlots;
   const bodyW = Math.min(slot * 0.62, 34);
 
-  const lineValues = lines.flatMap((l) => l.values.slice(0, n).filter((v): v is number => v !== null));
-  const rawMin = Math.min(...candles.map((c) => c.low), ...lineValues, ...hlines.map((h) => h.price));
-  const rawMax = Math.max(...candles.map((c) => c.high), ...lineValues, ...hlines.map((h) => h.price));
-  const margin = (rawMax - rawMin) * 0.06 || rawMax * 0.01;
+  // 縦軸はローソク足と水平線に合わせる。移動平均線が大きく離れているときは、はみ出た部分を描かない
+  const rawMin = Math.min(...candles.map((c) => c.low), ...hlines.map((h) => h.price));
+  const rawMax = Math.max(...candles.map((c) => c.high), ...hlines.map((h) => h.price));
+  const margin = (rawMax - rawMin) * yPadding || rawMax * 0.01;
   const min = rawMin - margin;
   const max = rawMax + margin;
   const maxVolume = Math.max(...candles.map((c) => c.volume));
@@ -81,7 +87,7 @@ export default function CandleChart({
     let pen = false;
     for (let i = from; i < Math.min(to, n); i++) {
       const v = values[i];
-      if (v === null || v === undefined) {
+      if (v === null || v === undefined || v < min || v > max) {
         pen = false;
         continue;
       }
@@ -243,6 +249,33 @@ export default function CandleChart({
           )}
         </g>
       ))}
+
+      {marks.map((m, i) => {
+        const c = candles[m.index];
+        if (!c) return null;
+        const cx = x(m.index);
+        const buy = m.side === "buy";
+        const tip = buy ? y(c.low) + 4 : y(c.high) - 4;
+        const base = buy ? tip + 9 : tip - 9;
+        return (
+          <g key={`m${i}`}>
+            <path
+              d={`M${cx},${tip} L${cx - 5},${base} L${cx + 5},${base} Z`}
+              fill={buy ? UP_COLOR : DOWN_COLOR}
+            />
+            <text
+              x={cx}
+              y={buy ? base + 11 : base - 3}
+              textAnchor="middle"
+              fontSize={10}
+              fontWeight={700}
+              fill={buy ? UP_COLOR : DOWN_COLOR}
+            >
+              {buy ? "買" : "売"}
+            </text>
+          </g>
+        );
+      })}
 
       {lines.length > 0 && (
         <g fontSize={11} fontWeight={700}>

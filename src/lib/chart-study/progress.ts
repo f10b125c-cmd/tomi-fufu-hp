@@ -19,14 +19,44 @@ export type Progress = {
     answered: number;
     correct: number;
   };
+  /** 仮想トレードの成績（新しい順、最大 MAX_TRADE_HISTORY 件） */
+  tradeHistory: TradeRecord[];
 };
+
+export type TradeRecord = {
+  /** 終了日時（ISO 文字列） */
+  at: string;
+  name: string;
+  returnPct: number;
+  holdReturnPct: number;
+  trades: number;
+};
+
+const MAX_TRADE_HISTORY = 20;
 
 const STORAGE_KEY = "tomifufu-chart-study:v1";
 const EMPTY: Progress = {
   completedLessons: [],
   termQuiz: { wrongIds: [], answered: 0, correct: 0 },
   chartQuiz: { answered: 0, correct: 0 },
+  tradeHistory: [],
 };
+
+function tradeRecords(value: unknown): TradeRecord[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(
+      (r): r is TradeRecord =>
+        typeof r === "object" &&
+        r !== null &&
+        typeof r.at === "string" &&
+        typeof r.name === "string" &&
+        Number.isFinite(r.returnPct) &&
+        Number.isFinite(r.holdReturnPct) &&
+        Number.isFinite(r.trades),
+    )
+    .slice(0, MAX_TRADE_HISTORY);
+}
 
 function stringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((s): s is string => typeof s === "string") : [];
@@ -67,6 +97,7 @@ function getSnapshot(): Progress {
         answered: count(chart.answered),
         correct: count(chart.correct),
       },
+      tradeHistory: tradeRecords(parsed.tradeHistory),
     };
   } catch {
     cachedValue = EMPTY;
@@ -131,6 +162,14 @@ export function recordChartAnswer(correct: boolean) {
       answered: current.chartQuiz.answered + 1,
       correct: current.chartQuiz.correct + (correct ? 1 : 0),
     },
+  });
+}
+
+export function recordTradeResult(record: TradeRecord) {
+  const current = getSnapshot();
+  write({
+    ...current,
+    tradeHistory: [record, ...current.tradeHistory].slice(0, MAX_TRADE_HISTORY),
   });
 }
 

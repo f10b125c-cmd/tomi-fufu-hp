@@ -7,7 +7,7 @@ export type Candle = {
 };
 
 /** 乱数シードを固定した擬似乱数（同じシードなら毎回同じチャートになる） */
-function mulberry32(seed: number) {
+export function mulberry32(seed: number) {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;

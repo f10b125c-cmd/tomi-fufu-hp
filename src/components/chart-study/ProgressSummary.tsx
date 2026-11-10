@@ -3,8 +3,9 @@
 import { resetProgress, useProgress } from "@/lib/chart-study/progress";
 
 export default function ProgressSummary({ lessonSlugs }: { lessonSlugs: string[] }) {
-  const { completedLessons, termQuiz, chartQuiz } = useProgress();
-  const hasAny = completedLessons.length > 0 || termQuiz.answered > 0 || chartQuiz.answered > 0;
+  const { completedLessons, termQuiz, chartQuiz, tradeHistory } = useProgress();
+  const hasAny = completedLessons.length > 0 || termQuiz.answered > 0 || chartQuiz.answered > 0 || tradeHistory.length > 0;
+  const lastTrade = tradeHistory[0];
   const done = lessonSlugs.filter((s) => completedLessons.includes(s)).length;
   const total = lessonSlugs.length;
 
@@ -22,7 +23,7 @@ export default function ProgressSummary({ lessonSlugs }: { lessonSlugs: string[]
           style={{ width: `${total ? (done / total) * 100 : 0}%` }}
         />
       </div>
-      <dl className="mt-4 grid grid-cols-3 gap-2 text-center sm:gap-3">
+      <dl className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4 sm:gap-3">
         <div className="rounded-2xl bg-brand-cream px-2 py-3">
           <dt className="text-xs text-brand-navy/60">用語クイズ 正答率</dt>
           <dd className="mt-1 text-lg font-bold text-brand-navy">
@@ -42,6 +43,14 @@ export default function ProgressSummary({ lessonSlugs }: { lessonSlugs: string[]
         <div className="rounded-2xl bg-brand-cream px-2 py-3">
           <dt className="text-xs text-brand-navy/60">復習待ちの用語</dt>
           <dd className="mt-1 text-lg font-bold text-brand-navy">{termQuiz.wrongIds.length}問</dd>
+        </div>
+        <div className="rounded-2xl bg-brand-cream px-2 py-3">
+          <dt className="text-xs text-brand-navy/60">前回の仮想トレード</dt>
+          <dd className="mt-1 text-lg font-bold text-brand-navy">
+            {lastTrade
+              ? `${lastTrade.returnPct >= 0 ? "+" : "−"}${Math.abs(lastTrade.returnPct).toFixed(1)}%`
+              : "—"}
+          </dd>
         </div>
       </dl>
       <div className="mt-3 flex items-center justify-between gap-4">

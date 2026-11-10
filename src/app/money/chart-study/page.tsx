@@ -42,10 +42,11 @@ const modes: {
     ready: true,
   },
   {
+    href: "/money/chart-study/trade",
     step: "STEP 4",
     title: "仮想トレード練習",
     description: "仮想資金100万円で、過去チャートを1日ずつ進めながら売買を体験。",
-    ready: false,
+    ready: true,
   },
 ];
 

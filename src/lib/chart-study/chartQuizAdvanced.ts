@@ -121,6 +121,98 @@ export const advancedScenarios: ChartQuizScenario[] = [
     ],
   },
 
+  // ── 一目均衡表 ──────────────────────────
+  // 助走期間は 80 日（-80 まで指定できる）。雲は26日前までの値動きから描かれる
+  {
+    id: "adv-ichimoku-cloud-breakout",
+    level: "advanced",
+    indicators: ["ichimoku"],
+    pattern: "一目均衡表の雲抜け",
+    expected: "up",
+    textbook: true,
+    seed: 401,
+    path: [[-80, 1200], [-30, 950], [0, 930], [20, 960], [28, 990], [31, 1040], [43, 1110]],
+    labels: [{ day: 31, text: "雲を上抜け" }],
+    explanation: [
+      "長いあいだ雲の下（弱い状態）にあった株価が、雲を下から上に抜けました。一目均衡表で代表的な買いのサインとされる「雲抜け」です。",
+      "雲は、過去の値動きの「中心」を26日先に描いたもの。その上に出たということは、これまでの売りの勢いを上回ったと考えられます。",
+    ],
+  },
+  {
+    id: "adv-ichimoku-cloud-support",
+    level: "advanced",
+    indicators: ["ichimoku"],
+    pattern: "一目均衡表の雲で下げ止まり",
+    expected: "up",
+    textbook: true,
+    seed: 402,
+    path: [[-80, 800], [-20, 950], [0, 1000], [15, 1080], [28, 990], [31, 1012], [43, 1095]],
+    labels: [{ day: 28, text: "雲で下げ止まり" }],
+    explanation: [
+      "上昇の途中で一度下がりましたが、雲の上のあたりで下げ止まりました。",
+      "株価が雲の上にあるとき、雲は下値の「支え」として意識されやすくなります。雲が厚いほど、支えとしての力も強いとされます。",
+    ],
+  },
+  {
+    id: "adv-ichimoku-sanyaku-koten",
+    level: "advanced",
+    indicators: ["ichimoku"],
+    pattern: "一目均衡表の三役好転",
+    expected: "up",
+    textbook: true,
+    seed: 403,
+    path: [[-80, 1000], [-30, 940], [0, 960], [31, 1080], [43, 1160]],
+    explanation: [
+      "① 転換線が基準線の上、② 株価が雲の上、③ 遅行スパンが26日前の株価の上。この3つがそろった状態を「三役好転」と呼びます。",
+      "一目均衡表でもっとも強い買いのサインのひとつとされ、上昇の流れがしっかりしていることを示します。",
+    ],
+  },
+  {
+    id: "adv-ichimoku-sanyaku-gyakuten",
+    level: "advanced",
+    indicators: ["ichimoku"],
+    pattern: "一目均衡表の三役逆転",
+    expected: "down",
+    textbook: true,
+    seed: 404,
+    path: [[-80, 950], [-30, 1060], [0, 1040], [31, 920], [43, 840]],
+    explanation: [
+      "① 転換線が基準線の下、② 株価が雲の下、③ 遅行スパンが26日前の株価の下。三役好転の逆で、「三役逆転」と呼びます。",
+      "一目均衡表でもっとも強い売りのサインのひとつとされ、下落の流れがはっきりしていることを示します。",
+    ],
+  },
+  {
+    id: "adv-ichimoku-cloud-resistance",
+    level: "advanced",
+    indicators: ["ichimoku"],
+    pattern: "一目均衡表の雲に押し戻される",
+    expected: "down",
+    textbook: true,
+    seed: 405,
+    path: [[-80, 1250], [-20, 1050], [0, 1000], [15, 930], [28, 1005], [31, 985], [43, 905]],
+    labels: [{ day: 28, text: "雲に届いて反落" }],
+    explanation: [
+      "下落の途中で戻りましたが、雲の下側に届いたところで押し戻されました。",
+      "株価が雲の下にあるとき、雲は上値の「抵抗」として意識されやすくなります。雲の中に入れないうちは、下落の流れが続きやすいとされます。",
+    ],
+  },
+  {
+    id: "adv-ichimoku-thin-cloud-fake",
+    level: "advanced",
+    indicators: ["ichimoku"],
+    showVolume: true,
+    pattern: "薄い雲の上抜けの失敗",
+    expected: "down",
+    textbook: false,
+    seed: 406,
+    path: [[-80, 1000], [-30, 1010], [0, 990], [25, 985], [31, 1030], [35, 1010], [43, 940]],
+    labels: [{ day: 31, text: "薄い雲を上抜け" }],
+    explanation: [
+      "雲を上に抜けたので「上がる」と思えましたが、その後は雲の下に戻ってしまいました。",
+      "このときの雲はとても薄く、出来高も増えていませんでした。薄い雲は抜けやすい一方で、抜けても支えとしての力が弱いとされます。雲の厚さと出来高もあわせて確かめましょう。",
+    ],
+  },
+
   // ── 形の難しいパターン ──────────────────────────
   {
     id: "adv-triangle-breakout",

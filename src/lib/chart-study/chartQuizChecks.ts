@@ -44,6 +44,10 @@ const upperShadow = (b: BuiltScenario, i: number) =>
 
 const near = (value: number, target: number, pct: number) => Math.abs(value - target) / target <= pct / 100;
 
+/** 一目均衡表の雲の上端・下端 */
+const cloudTop = (b: BuiltScenario, i: number) => Math.max(b.ichimoku.span1[i]!, b.ichimoku.span2[i]!);
+const cloudBottom = (b: BuiltScenario, i: number) => Math.min(b.ichimoku.span1[i]!, b.ichimoku.span2[i]!);
+
 const crossLabel = (b: BuiltScenario) => b.labels.find((l) => l.text.includes("クロス"))?.text;
 
 /** 合格なら true、不合格なら理由の文字列 */
@@ -125,6 +129,44 @@ const checks: Record<string, Check> = {
       if (close(b, i) <= b.bb.middle[i]! - 0.5 * (b.bb.middle[i]! - b.bb.lower[i]!)) n++;
     }
     return (n >= 7 && b.candles[L].low <= b.bb.lower[L]! * 1.005) || "下のバンドに触れていない";
+  },
+  "adv-ichimoku-cloud-breakout": (b) => {
+    const wasBelow = Array.from({ length: 25 }, (_, i) => i).every((i) => close(b, i) <= cloudTop(b, i));
+    return (wasBelow && close(b, L) > cloudTop(b, L)) || "雲の下から上に抜けていない";
+  },
+  "adv-ichimoku-cloud-support": (b) => {
+    let lowest = 25;
+    for (let i = 25; i <= L; i++) if (b.candles[i].low < b.candles[lowest].low) lowest = i;
+    const top = cloudTop(b, lowest);
+    const touched = b.candles[lowest].low >= top * 0.985 && b.candles[lowest].low <= top * 1.015;
+    return (
+      (touched && close(b, 15) > cloudTop(b, 15) && close(b, L) > cloudTop(b, L)) ||
+      `安値 ${b.candles[lowest].low}・雲の上端 ${top.toFixed(0)}`
+    );
+  },
+  "adv-ichimoku-sanyaku-koten": (b) =>
+    (b.ichimoku.tenkan[L]! > b.ichimoku.kijun[L]! &&
+      close(b, L) > cloudTop(b, L) &&
+      close(b, L) > close(b, L - 25)) ||
+    "三役好転がそろっていない",
+  "adv-ichimoku-sanyaku-gyakuten": (b) =>
+    (b.ichimoku.tenkan[L]! < b.ichimoku.kijun[L]! &&
+      close(b, L) < cloudBottom(b, L) &&
+      close(b, L) < close(b, L - 25)) ||
+    "三役逆転がそろっていない",
+  "adv-ichimoku-cloud-resistance": (b) => {
+    let highest = 25;
+    for (let i = 25; i <= L; i++) if (b.candles[i].high > b.candles[highest].high) highest = i;
+    const bottom = cloudBottom(b, highest);
+    const touched = b.candles[highest].high >= bottom * 0.985 && b.candles[highest].high <= bottom * 1.015;
+    return (touched && close(b, L) < cloudBottom(b, L)) || `高値 ${b.candles[highest].high}・雲の下端 ${bottom.toFixed(0)}`;
+  },
+  "adv-ichimoku-thin-cloud-fake": (b) => {
+    const thickness = (cloudTop(b, L) - cloudBottom(b, L)) / close(b, L);
+    return (
+      (close(b, L) > cloudTop(b, L) && thickness < 0.015 && b.candles[L].volume < 1.3 * avgVolume(b, 15, 29)) ||
+      `終値 ${close(b, L)}・雲の上端 ${cloudTop(b, L).toFixed(0)}・厚さ ${(thickness * 100).toFixed(1)}%`
+    );
   },
   "adv-descending-triangle": (b) => close(b, L) < b.price(950) || "サポートラインを割っていない",
   "adv-cup-with-handle": (b) => close(b, L) > b.price(1050) || "カップのふちを抜けていない",

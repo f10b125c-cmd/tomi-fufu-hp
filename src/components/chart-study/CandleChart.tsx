@@ -17,6 +17,15 @@ export type ChartLine = {
   fitRange?: boolean;
 };
 
+/** 2本の線のあいだを塗る帯（一目均衡表の雲など）。a が b より上なら colorUp、下なら colorDown */
+export type ChartBand = {
+  a: (number | null)[];
+  b: (number | null)[];
+  label: string;
+  colorUp: string;
+  colorDown: string;
+};
+
 /** チャートの下に出すオシレーター系の指標 */
 export type IndicatorPanel =
   | { kind: "rsi"; values: (number | null)[] }
@@ -41,6 +50,7 @@ export default function CandleChart({
   marks = [],
   yPadding = 0.06,
   indicator,
+  bands = [],
   ariaLabel,
 }: {
   candles: Candle[];
@@ -64,6 +74,8 @@ export default function CandleChart({
   yPadding?: number;
   /** チャートの下に RSI・MACD を表示する（values は candles と同じ並び） */
   indicator?: IndicatorPanel;
+  /** 線のあいだを塗る帯（一目均衡表の雲など）。縦軸の範囲にも含める */
+  bands?: ChartBand[];
   ariaLabel?: string;
 }) {
   const n = candles.length;
@@ -76,9 +88,10 @@ export default function CandleChart({
   const bodyW = Math.min(slot * 0.62, 34);
 
   // 縦軸はローソク足と水平線に合わせる。移動平均線が大きく離れているときは、はみ出た部分を描かない
-  const fitValues = lines
-    .filter((l) => l.fitRange)
-    .flatMap((l) => l.values.slice(0, n).filter((v): v is number => v !== null));
+  const fitValues = [
+    ...lines.filter((l) => l.fitRange).map((l) => l.values),
+    ...bands.flatMap((band) => [band.a, band.b]),
+  ].flatMap((values) => values.slice(0, n).filter((v): v is number => v !== null));
   const rawMin = Math.min(...candles.map((c) => c.low), ...hlines.map((h) => h.price), ...fitValues);
   const rawMax = Math.max(...candles.map((c) => c.high), ...hlines.map((h) => h.price), ...fitValues);
   const margin = (rawMax - rawMin) * yPadding || rawMax * 0.01;
@@ -341,6 +354,25 @@ export default function CandleChart({
         </text>
       )}
 
+      {bands.map((band) => (
+        <g key={band.label}>
+          {candles.map((_, i) => {
+            const [a0, b0, a1, b1] = [band.a[i], band.b[i], band.a[i + 1], band.b[i + 1]];
+            if (i + 1 >= n || a0 == null || b0 == null || a1 == null || b1 == null) return null;
+            const points = `${x(i)},${y(a0)} ${x(i + 1)},${y(a1)} ${x(i + 1)},${y(b1)} ${x(i)},${y(b0)}`;
+            return (
+              <polygon
+                key={i}
+                points={points}
+                fill={a0 >= b0 ? band.colorUp : band.colorDown}
+                fillOpacity={0.22}
+                style={animated(i + 1) ? afterAll : undefined}
+              />
+            );
+          })}
+        </g>
+      ))}
+
       {candles.map((c, i) => {
         const up = c.close >= c.open;
         const color = up ? UP_COLOR : DOWN_COLOR;
@@ -395,8 +427,16 @@ export default function CandleChart({
         );
       })}
 
-      {lines.length > 0 && (
+      {lines.length + bands.length > 0 && (
         <g fontSize={11} fontWeight={700}>
+          {bands.map((band, i) => (
+            <g key={band.label} transform={`translate(${PAD.left + 4 + (lines.length + i) * 82}, 10)`}>
+              <rect x={0} y={-5} width={18} height={10} fill={band.colorUp} fillOpacity={0.35} />
+              <text x={22} y={4} fill="#24313a" fillOpacity={0.75}>
+                {band.label}
+              </text>
+            </g>
+          ))}
           {lines.map((l, i) => (
             <g key={l.label} transform={`translate(${PAD.left + 4 + i * 82}, 10)`}>
               <line
@@ -442,7 +482,7 @@ export default function CandleChart({
         const cx = x(label.index);
         const anchor = cx < 60 ? "start" : cx > W - PAD.right - 50 ? "end" : "middle";
         // 注釈はローソク足と重ならないよう、上部の余白にまとめて置く（凡例があるときは少し下げる）
-        const ty = lines.length > 0 ? 28 : 18;
+        const ty = lines.length + bands.length > 0 ? 28 : 18;
         return (
           <g key={`${label.index}-${label.text}`} style={animated(label.index) ? afterAll : undefined}>
             <line

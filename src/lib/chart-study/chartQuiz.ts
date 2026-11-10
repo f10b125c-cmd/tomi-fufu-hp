@@ -1,7 +1,7 @@
 import { generateFromPath, movingAverage, type Candle, type PathPoint } from "./candles";
 import { advancedScenarios } from "./chartQuizAdvanced";
 import { acceptedVariants } from "./chartQuizVariants.generated";
-import { bollinger, macd, rsi } from "./indicators";
+import { bollinger, ichimoku, macd, rsi } from "./indicators";
 
 export const VISIBLE_DAYS = 32;
 export const FUTURE_DAYS = 12;
@@ -9,11 +9,13 @@ export const FUTURE_DAYS = 12;
 const WARMUP_DAYS = 25;
 /** 上級は MACD（26日＋9日）まで最初から描けるよう、助走期間を長くとる */
 const ADVANCED_WARMUP_DAYS = 45;
+/** 一目均衡表の雲（52日＋26日先）を最初から描くための助走期間 */
+const ICHIMOKU_WARMUP_DAYS = 80;
 
 export type QuizLevel = "basic" | "advanced";
 export const levelLabels: Record<QuizLevel, string> = { basic: "初級", advanced: "上級" };
 
-export type IndicatorKind = "bb" | "rsi" | "macd";
+export type IndicatorKind = "bb" | "rsi" | "macd" | "ichimoku";
 
 export type Direction = "up" | "down";
 
@@ -22,7 +24,7 @@ export type ChartQuizScenario = {
   id: string;
   /** 省略時は初級 */
   level?: QuizLevel;
-  /** 上級で表示する指標（bb はチャートに重ねる。rsi・macd は下の欄に1つだけ） */
+  /** 上級で表示する指標（bb・ichimoku はチャートに重ねる。rsi・macd は下の欄に1つだけ） */
   indicators?: IndicatorKind[];
   /** 答えのあとに明かすパターン名 */
   pattern: string;
@@ -454,6 +456,7 @@ export type BuiltScenario = {
   rsi: (number | null)[];
   macd: ReturnType<typeof macd>;
   bb: ReturnType<typeof bollinger>;
+  ichimoku: ReturnType<typeof ichimoku>;
   /** 答えのあとに出す注釈（ゴールデン／デッドクロスは自動で位置を求める） */
   labels: { index: number; text: string }[];
   /** 表示最後の終値から、最後の終値までの変化率（%） */
@@ -462,7 +465,11 @@ export type BuiltScenario = {
 };
 
 export function buildScenario(s: ChartQuizScenario, variant = 0): BuiltScenario {
-  const warmup = levelOf(s) === "advanced" ? ADVANCED_WARMUP_DAYS : WARMUP_DAYS;
+  const warmup = s.indicators?.includes("ichimoku")
+    ? ICHIMOKU_WARMUP_DAYS
+    : levelOf(s) === "advanced"
+      ? ADVANCED_WARMUP_DAYS
+      : WARMUP_DAYS;
   const v = VARIANTS[variant];
   const price = priceMapOf(variant);
   const all = generateFromPath({
@@ -488,6 +495,7 @@ export function buildScenario(s: ChartQuizScenario, variant = 0): BuiltScenario 
   const ma25 = cut(movingAverage(all, 25));
   const m = macd(all);
   const b = bollinger(all);
+  const ich = ichimoku(all);
   const candles = cut(all);
 
   const labels = (s.labels ?? []).map((l) => ({ index: l.day, text: l.text }));
@@ -523,6 +531,7 @@ export function buildScenario(s: ChartQuizScenario, variant = 0): BuiltScenario 
     rsi: cut(rsi(all)),
     macd: { line: cut(m.line), signal: cut(m.signal), histogram: cut(m.histogram) },
     bb: { middle: cut(b.middle), upper: cut(b.upper), lower: cut(b.lower) },
+    ichimoku: { tenkan: cut(ich.tenkan), kijun: cut(ich.kijun), span1: cut(ich.span1), span2: cut(ich.span2) },
     labels,
     changePct,
     actual: changePct >= 0 ? "up" : "down",

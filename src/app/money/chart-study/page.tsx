@@ -13,7 +13,13 @@ export const metadata = {
   description: "投資初心者がチャートの読み方を、レッスンとクイズで楽しく学べるページです。",
 };
 
-const modes = [
+const modes: {
+  href?: string;
+  step: string;
+  title: string;
+  description: string;
+  ready: boolean;
+}[] = [
   {
     href: "/money/chart-study/lessons",
     step: "STEP 1",
@@ -22,10 +28,11 @@ const modes = [
     ready: true,
   },
   {
+    href: "/money/chart-study/quiz/terms",
     step: "STEP 2",
     title: "用語クイズ",
     description: "PER・出来高・始値など、よく出る用語を4択クイズでおさらい。",
-    ready: false,
+    ready: true,
   },
   {
     step: "STEP 3",

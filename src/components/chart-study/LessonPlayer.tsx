@@ -5,16 +5,13 @@ import { useRef, useState } from "react";
 import type { LessonStep, QuizQuestion } from "@/lib/chart-study/lessons";
 import { markLessonComplete } from "@/lib/chart-study/progress";
 import ChartVisualView from "./ChartVisualView";
+import QuizView, { buttonGhost, buttonPrimary } from "./QuizView";
 
 type Phase =
   | { kind: "step"; index: number }
   | { kind: "quiz"; index: number; selected: number | null }
   | { kind: "done" };
 
-const buttonPrimary =
-  "min-h-11 rounded-full bg-brand-orange px-6 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-40";
-const buttonGhost =
-  "min-h-11 rounded-full border border-brand-navy/15 px-6 py-3 text-sm font-semibold text-brand-navy hover:bg-brand-cream";
 
 export default function LessonPlayer({
   slug,
@@ -191,82 +188,5 @@ export default function LessonPlayer({
         </section>
       )}
     </div>
-  );
-}
-
-function QuizView({
-  question,
-  number,
-  selected,
-  onAnswer,
-  onNext,
-  isLast,
-}: {
-  question: QuizQuestion;
-  number: number;
-  selected: number | null;
-  onAnswer: (choice: number) => void;
-  onNext: () => void;
-  isLast: boolean;
-}) {
-  const answered = selected !== null;
-  const isCorrect = selected === question.answerIndex;
-
-  return (
-    <section>
-      <p className="text-sm font-bold tracking-[0.15em] text-brand-orange">Q{number}</p>
-      <h2 className="mt-2 font-display text-xl font-bold text-brand-navy">{question.question}</h2>
-      {question.visual && (
-        <div className="mt-5">
-          <ChartVisualView visual={question.visual} />
-        </div>
-      )}
-      <ul className="mt-5 space-y-3">
-        {question.choices.map((choice, i) => {
-          const isAnswer = i === question.answerIndex;
-          const isSelected = i === selected;
-          let style = "border-brand-navy/15 bg-white hover:border-brand-orange";
-          let mark = "";
-          if (answered) {
-            if (isAnswer) {
-              style = "border-[#2e9d5b] bg-[#eaf7ef]";
-              mark = "○ 正解";
-            } else if (isSelected) {
-              style = "border-[#d23f3f] bg-[#fdeeee]";
-              mark = "× あなたの回答";
-            } else {
-              style = "border-brand-navy/10 bg-white opacity-60";
-            }
-          }
-          return (
-            <li key={choice}>
-              <button
-                type="button"
-                onClick={() => onAnswer(i)}
-                disabled={answered}
-                className={`flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border-2 px-4 py-3 text-left text-brand-navy transition ${style}`}
-              >
-                <span>{choice}</span>
-                {mark && <span className="shrink-0 text-xs font-bold">{mark}</span>}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-
-      {answered && (
-        <div className="mt-6" aria-live="polite">
-          <div className={`rounded-2xl p-5 ${isCorrect ? "bg-[#eaf7ef]" : "bg-[#fdeeee]"}`}>
-            <p className="font-bold text-brand-navy">{isCorrect ? "○ 正解！" : "× ざんねん…"}</p>
-            <p className="mt-2 text-sm leading-relaxed text-brand-navy/85">{question.explanation}</p>
-          </div>
-          <div className="mt-6 flex justify-end">
-            <button type="button" className={buttonPrimary} onClick={onNext}>
-              {isLast ? "結果を見る →" : "次の問題へ →"}
-            </button>
-          </div>
-        </div>
-      )}
-    </section>
   );
 }

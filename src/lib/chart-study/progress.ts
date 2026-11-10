@@ -9,10 +9,27 @@ import { useSyncExternalStore } from "react";
 
 export type Progress = {
   completedLessons: string[];
+  termQuiz: {
+    /** 間違えた問題の ID（正解すると外れる）＝復習リスト */
+    wrongIds: string[];
+    answered: number;
+    correct: number;
+  };
 };
 
 const STORAGE_KEY = "tomifufu-chart-study:v1";
-const EMPTY: Progress = { completedLessons: [] };
+const EMPTY: Progress = {
+  completedLessons: [],
+  termQuiz: { wrongIds: [], answered: 0, correct: 0 },
+};
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((s): s is string => typeof s === "string") : [];
+}
+
+function count(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+}
 
 const listeners = new Set<() => void>();
 let cachedRaw: string | null = null;
@@ -31,11 +48,15 @@ function getSnapshot(): Progress {
   if (raw === cachedRaw) return cachedValue;
   cachedRaw = raw;
   try {
-    const parsed = raw ? (JSON.parse(raw) as Partial<Progress>) : {};
+    const parsed = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+    const quiz = (parsed.termQuiz ?? {}) as Record<string, unknown>;
     cachedValue = {
-      completedLessons: Array.isArray(parsed.completedLessons)
-        ? parsed.completedLessons.filter((s): s is string => typeof s === "string")
-        : [],
+      completedLessons: stringArray(parsed.completedLessons),
+      termQuiz: {
+        wrongIds: stringArray(quiz.wrongIds),
+        answered: count(quiz.answered),
+        correct: count(quiz.correct),
+      },
     };
   } catch {
     cachedValue = EMPTY;
@@ -76,6 +97,20 @@ export function markLessonComplete(slug: string) {
   const current = getSnapshot();
   if (current.completedLessons.includes(slug)) return;
   write({ ...current, completedLessons: [...current.completedLessons, slug] });
+}
+
+/** 用語クイズの1問の結果を記録する。間違えたら復習リストに入れ、正解したら外す */
+export function recordTermAnswer(id: string, correct: boolean) {
+  const current = getSnapshot();
+  const others = current.termQuiz.wrongIds.filter((w) => w !== id);
+  write({
+    ...current,
+    termQuiz: {
+      wrongIds: correct ? others : [...others, id],
+      answered: current.termQuiz.answered + 1,
+      correct: current.termQuiz.correct + (correct ? 1 : 0),
+    },
+  });
 }
 
 export function resetProgress() {

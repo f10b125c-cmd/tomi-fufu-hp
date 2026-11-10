@@ -3,7 +3,8 @@
 import { resetProgress, useProgress } from "@/lib/chart-study/progress";
 
 export default function ProgressSummary({ lessonSlugs }: { lessonSlugs: string[] }) {
-  const { completedLessons } = useProgress();
+  const { completedLessons, termQuiz } = useProgress();
+  const hasAny = completedLessons.length > 0 || termQuiz.answered > 0;
   const done = lessonSlugs.filter((s) => completedLessons.includes(s)).length;
   const total = lessonSlugs.length;
 
@@ -21,9 +22,23 @@ export default function ProgressSummary({ lessonSlugs }: { lessonSlugs: string[]
           style={{ width: `${total ? (done / total) * 100 : 0}%` }}
         />
       </div>
+      <dl className="mt-4 grid grid-cols-2 gap-3 text-center">
+        <div className="rounded-2xl bg-brand-cream px-3 py-3">
+          <dt className="text-xs text-brand-navy/60">用語クイズ 正答率</dt>
+          <dd className="mt-1 text-lg font-bold text-brand-navy">
+            {termQuiz.answered > 0
+              ? `${Math.round((termQuiz.correct / termQuiz.answered) * 100)}%`
+              : "—"}
+          </dd>
+        </div>
+        <div className="rounded-2xl bg-brand-cream px-3 py-3">
+          <dt className="text-xs text-brand-navy/60">復習待ちの用語</dt>
+          <dd className="mt-1 text-lg font-bold text-brand-navy">{termQuiz.wrongIds.length}問</dd>
+        </div>
+      </dl>
       <div className="mt-3 flex items-center justify-between gap-4">
         <p className="text-xs text-brand-navy/50">進み具合はこの端末のブラウザに保存されます。</p>
-        {done > 0 && (
+        {hasAny && (
           <button
             type="button"
             className="shrink-0 text-xs font-semibold text-brand-blue-deep underline hover:opacity-70"

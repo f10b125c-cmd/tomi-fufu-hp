@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import PageHero from "./PageHero";
@@ -15,17 +16,21 @@ export default function CategoryPage({
   subtitle,
   heroVariant,
   items,
+  feature,
 }: {
   eyebrow: string;
   title: string;
   subtitle: string;
   heroVariant: "sea" | "sun" | "yellow";
   items: CategoryItem[];
+  /** ヒーロー直下に差し込む特集ブロック（任意） */
+  feature?: ReactNode;
 }) {
   return (
     <>
       <Header />
       <PageHero eyebrow={eyebrow} title={title} subtitle={subtitle} variant={heroVariant} />
+      {feature}
 
       <section className="px-6 py-20 text-center md:px-12">
         <p className="text-sm font-bold tracking-[0.2em] text-brand-orange">

@@ -79,7 +79,8 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[rgba(10,35,48,0.64)] via-[rgba(10,35,48,0.18)] to-[rgba(10,35,48,0.08)]" />
 
-        <div className="relative z-10">
+        {/* ヘッダーはヒーローの文章より手前に置く（同じ z-10 だと文章に覆われてリンクが押せない） */}
+        <div className="relative z-20">
           <Header transparent />
         </div>
 

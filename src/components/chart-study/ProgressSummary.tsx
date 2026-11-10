@@ -58,7 +58,7 @@ export default function ProgressSummary({ lessonSlugs }: { lessonSlugs: string[]
         {hasAny && (
           <button
             type="button"
-            className="shrink-0 text-xs font-semibold text-brand-blue-deep underline hover:opacity-70"
+            className="-my-3 min-h-11 shrink-0 px-2 text-xs font-semibold text-brand-blue-deep underline hover:opacity-70"
             onClick={() => {
               if (window.confirm("進み具合をリセットしますか？")) resetProgress();
             }}

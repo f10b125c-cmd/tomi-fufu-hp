@@ -48,3 +48,9 @@ body {
     animation-delay: 0s !important;
   }
 }
+
+/* スマホで「次の日へ」などを素早く連打しても、ダブルタップで拡大されないようにする */
+a,
+button {
+  touch-action: manipulation;
+}

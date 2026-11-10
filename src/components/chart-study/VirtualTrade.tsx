@@ -224,7 +224,9 @@ function PlayView({
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="font-display text-lg font-bold text-brand-navy">
           {market.name}
-          <span className="ml-1 text-xs font-normal text-brand-navy/50">（架空の銘柄）</span>
+          <span className="block font-sans text-xs font-normal text-brand-navy/50 min-[400px]:ml-1 min-[400px]:inline">
+            （架空の銘柄）
+          </span>
         </h2>
         <p className="shrink-0 text-sm font-bold text-brand-navy">
           {day + 1}
@@ -258,18 +260,21 @@ function PlayView({
         />
       </figure>
 
-      <div className="mt-3 flex items-baseline justify-between">
-        <p className="text-sm text-brand-navy/70">今日の終値</p>
-        <p>
+      <div className="mt-3 flex items-baseline justify-between gap-3">
+        <p className="shrink-0 text-sm text-brand-navy/70">今日の終値</p>
+        <p className="text-right">
           <span className="text-2xl font-bold text-brand-navy">{yen(price)}</span>
-          <span className="ml-2 text-sm font-bold" style={{ color: tone(dayChange) }}>
+          <span
+            className="ml-2 inline-block whitespace-nowrap text-sm font-bold"
+            style={{ color: tone(dayChange) }}
+          >
             前日比 {signedPct(dayChange)}
           </span>
         </p>
       </div>
 
       <div className="mt-4 rounded-2xl bg-brand-cream p-4">
-        <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline justify-between gap-3">
           <p className="shrink-0 text-sm font-bold text-brand-navy">総資産</p>
           <p className="text-right">
             <span className="text-xl font-bold text-brand-navy">{yen(value)}</span>
@@ -315,10 +320,10 @@ function PlayView({
         {isLast ? "結果を見る →" : "次の日へ ▶"}
       </button>
       {!isLast && (
-        <div className="mt-3 text-center">
+        <div className="mt-1 text-center">
           <button
             type="button"
-            className="text-xs font-semibold text-brand-blue-deep underline hover:opacity-70"
+            className="min-h-11 px-4 text-xs font-semibold text-brand-blue-deep underline hover:opacity-70"
             onClick={() => {
               if (window.confirm("ここで終了して、今日の終値で成績を計算しますか？")) onFinish(day);
             }}

@@ -24,7 +24,7 @@ export default function LessonsPage() {
       <Header />
       <main className="bg-brand-cream px-4 py-12 sm:px-6 md:px-12">
         <div className="mx-auto max-w-2xl">
-          <Link href="/money/chart-study" className="text-sm font-semibold text-brand-blue-deep hover:opacity-70">
+          <Link href="/money/chart-study" className="-my-3 inline-block py-3 text-sm font-semibold text-brand-blue-deep hover:opacity-70">
             ← 株価チャート学習トップ
           </Link>
           <p className="mt-6 text-sm font-bold tracking-[0.2em] text-brand-orange">LESSONS</p>

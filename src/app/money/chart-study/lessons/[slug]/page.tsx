@@ -36,7 +36,7 @@ export default async function LessonPage({ params }: PageProps<"/money/chart-stu
         <div className="mx-auto max-w-2xl">
           <Link
             href="/money/chart-study/lessons"
-            className="text-sm font-semibold text-brand-blue-deep hover:opacity-70"
+            className="-my-3 inline-block py-3 text-sm font-semibold text-brand-blue-deep hover:opacity-70"
           >
             ← レッスン一覧
           </Link>

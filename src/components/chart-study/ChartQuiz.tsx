@@ -7,7 +7,9 @@ import {
   FUTURE_DAYS,
   levelLabels,
   levelOf,
+  poolSize,
   scenarios,
+  variantsOf,
   VISIBLE_DAYS,
   type BuiltScenario,
   type Direction,
@@ -70,13 +72,19 @@ function shuffle<T>(items: readonly T[]): T[] {
   return a;
 }
 
-/** 教科書どおりの問題に、だまし・失敗の問題を必ずまぜる（初級1問・上級2問） */
+/**
+ * 教科書どおりの問題に、だまし・失敗の問題を必ずまぜる（初級1問・上級2問）。
+ * 1セットの中で同じパターンが重ならないようにパターンを選び、それぞれ形違いをランダムに1つ使う。
+ */
 function pickSet(level: QuizLevel): BuiltScenario[] {
   const pool = scenarios.filter((s) => levelOf(s) === level);
   const trickyCount = TRICKY_PER_SET[level];
   const textbook = shuffle(pool.filter((s) => s.textbook)).slice(0, SET_SIZE - trickyCount);
   const tricky = shuffle(pool.filter((s) => !s.textbook)).slice(0, trickyCount);
-  return shuffle([...textbook, ...tricky]).map(buildScenario);
+  return shuffle([...textbook, ...tricky]).map((s) => {
+    const ks = variantsOf(s);
+    return buildScenario(s, ks[Math.floor(Math.random() * ks.length)]);
+  });
 }
 
 function Caution() {
@@ -161,7 +169,7 @@ export default function ChartQuiz() {
                     </span>
                     {levelLabels[lv]}
                     <span className="text-xs font-normal text-brand-navy/55">
-                      全{scenarios.filter((x) => levelOf(x) === lv).length}問
+                      全{poolSize(lv).questions}問（{poolSize(lv).patterns}パターン）
                     </span>
                   </span>
                   <span className="mt-1 block pl-7 text-xs leading-relaxed text-brand-navy/65">
@@ -326,7 +334,7 @@ function PlayView({
           divider={VISIBLE_DAYS}
           animateFrom={answered ? VISIBLE_DAYS : undefined}
           labels={answered ? labels : []}
-          hlines={answered ? scenario.hlines : []}
+          hlines={answered ? built.hlines : []}
           ariaLabel={
             answered
               ? `答えのチャート。この後${changePct >= 0 ? "上がった" : "下がった"}`
@@ -397,7 +405,7 @@ function PlayView({
             </p>
             <h3 className="mt-1 font-display text-lg font-bold text-brand-navy">{scenario.pattern}</h3>
             <div className="mt-2 space-y-2 text-sm leading-relaxed text-brand-navy/85">
-              {scenario.explanation.map((p) => (
+              {built.explanation.map((p) => (
                 <p key={p}>{p}</p>
               ))}
             </div>

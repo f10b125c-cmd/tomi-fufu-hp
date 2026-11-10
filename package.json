@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "verify:quiz": "tsx scripts/verify-chart-quiz.ts"
+    "verify:quiz": "tsx scripts/verify-chart-quiz.ts",
+    "gen:quiz": "tsx scripts/generate-quiz-variants.ts"
   },
   "dependencies": {
     "next": "16.2.10",

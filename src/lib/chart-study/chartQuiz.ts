@@ -1,5 +1,6 @@
 import { generateFromPath, movingAverage, type Candle, type PathPoint } from "./candles";
 import { advancedScenarios } from "./chartQuizAdvanced";
+import { acceptedVariants } from "./chartQuizVariants.generated";
 import { bollinger, macd, rsi } from "./indicators";
 
 export const VISIBLE_DAYS = 32;
@@ -163,7 +164,7 @@ const basicScenarios: ChartQuizScenario[] = [
     ],
     hlines: [{ price: 950, label: "サポートライン" }],
     explanation: [
-      "950円あたりで何度も下げ止まっていました。こうした水準を「サポートライン（支持線）」と呼びます。",
+      "{{950}}円あたりで何度も下げ止まっていました。こうした水準を「サポートライン（支持線）」と呼びます。",
       "「この値段なら買いたい」という人が多い水準なので、ふたたび反発しやすいとされます。",
     ],
     lessonSlug: "support-resistance",
@@ -182,7 +183,7 @@ const basicScenarios: ChartQuizScenario[] = [
     ],
     hlines: [{ price: 1050, label: "レジスタンスライン" }],
     explanation: [
-      "1,050円あたりで何度も上がり止まっていました。こうした水準を「レジスタンスライン（抵抗線）」と呼びます。",
+      "{{1050}}円あたりで何度も上がり止まっていました。こうした水準を「レジスタンスライン（抵抗線）」と呼びます。",
       "直近でも上ヒゲを出してはね返されており、ここを抜けられないうちは下がりやすいとされます。",
     ],
     lessonSlug: "support-resistance",
@@ -199,7 +200,7 @@ const basicScenarios: ChartQuizScenario[] = [
     labels: [{ day: 31, text: "出来高急増" }],
     hlines: [{ price: 1050, label: "レジスタンスライン" }],
     explanation: [
-      "何度もはね返されていた1,050円を、大きな出来高とともに上に抜けました。",
+      "何度もはね返されていた{{1050}}円を、大きな出来高とともに上に抜けました。",
       "多くの人が売り買いに参加したうえでの上抜けは「本物」になりやすく、新しい上昇の始まりとされます。",
     ],
     lessonSlug: "volume",
@@ -216,7 +217,7 @@ const basicScenarios: ChartQuizScenario[] = [
     labels: [{ day: 31, text: "割り込んだ" }],
     hlines: [{ price: 950, label: "サポートライン" }],
     explanation: [
-      "何度も下げ止まっていた950円を、出来高をともなって下に割り込みました。",
+      "何度も下げ止まっていた{{950}}円を、出来高をともなって下に割り込みました。",
       "支えになっていた水準を割ると、「ここで買った人」が損を確定させようと売りに回り、下落が加速しやすくなります。",
     ],
     lessonSlug: "support-resistance",
@@ -393,8 +394,60 @@ export function levelOf(s: ChartQuizScenario): QuizLevel {
   return s.level ?? "basic";
 }
 
+/** 出題に使える形違いの番号（自動チェックに合格したもの）。リストにない問題は元の問題だけ */
+export function variantsOf(s: ChartQuizScenario): number[] {
+  const ks = acceptedVariants[s.id];
+  return ks && ks.length > 0 ? ks : [0];
+}
+
+/** レベルごとの問題数（形違いを含む）とパターンの種類数 */
+export function poolSize(level: QuizLevel) {
+  const list = scenarios.filter((s) => levelOf(s) === level);
+  return { questions: list.reduce((n, s) => n + variantsOf(s).length, 0), patterns: list.length };
+}
+
+/**
+ * 同じパターンの「形違い」。値段の水準・パターンの深さ・ブレの大きさ・乱数を変える。
+ * k=0 は元の問題そのもの。どの k を出題に使うかは chartQuizVariants.generated.ts（自動チェックに合格したもの）で決まる。
+ * 公開後に並びを変えると、同じ k でも別のチャートになるので、追加するときは末尾に足すこと。
+ */
+export type Variant = { scale: number; amp: number; vol: number };
+export const VARIANTS: Variant[] = [
+  { scale: 1, amp: 1, vol: 1 },
+  { scale: 0.55, amp: 1.1, vol: 0.9 },
+  { scale: 1.6, amp: 0.9, vol: 1.1 },
+  { scale: 2.4, amp: 1.15, vol: 1 },
+  { scale: 0.8, amp: 0.95, vol: 1.15 },
+  { scale: 3.1, amp: 1.05, vol: 0.85 },
+  { scale: 1.25, amp: 0.88, vol: 1 },
+  { scale: 0.65, amp: 1.2, vol: 1.05 },
+  { scale: 1.9, amp: 1, vol: 0.95 },
+  { scale: 2.8, amp: 0.92, vol: 1.1 },
+  { scale: 0.9, amp: 1.12, vol: 0.9 },
+  { scale: 1.4, amp: 1.08, vol: 1 },
+];
+
+/** 問題に書いた値段（1,000円前後）を、形違いの値段に変換する */
+export function priceMapOf(k: number) {
+  const v = VARIANTS[k];
+  return (p: number) => v.scale * (1000 + v.amp * (p - 1000));
+}
+
+/** 解説の {{950}} などを、形違いの値段（10円単位）に置きかえる */
+function formatExplanation(text: string, price: (p: number) => number) {
+  return text.replace(/\{\{(\d+)\}\}/g, (_, n: string) =>
+    (Math.round(price(Number(n)) / 10) * 10).toLocaleString("ja-JP"),
+  );
+}
+
 export type BuiltScenario = {
   scenario: ChartQuizScenario;
+  /** 形違いの番号（0 は元の問題） */
+  variant: number;
+  /** 問題に書いた値段 → この形違いの値段 */
+  price: (p: number) => number;
+  hlines: { price: number; label: string }[];
+  explanation: string[];
   candles: Candle[];
   ma5: (number | null)[];
   ma25: (number | null)[];
@@ -408,15 +461,22 @@ export type BuiltScenario = {
   actual: Direction;
 };
 
-export function buildScenario(s: ChartQuizScenario): BuiltScenario {
+export function buildScenario(s: ChartQuizScenario, variant = 0): BuiltScenario {
   const warmup = levelOf(s) === "advanced" ? ADVANCED_WARMUP_DAYS : WARMUP_DAYS;
+  const v = VARIANTS[variant];
+  const price = priceMapOf(variant);
   const all = generateFromPath({
-    seed: s.seed,
+    // k=0 は元のシードのまま（既存の問題のチャートを変えない）
+    seed: s.seed + variant * 1009,
     days: warmup + VISIBLE_DAYS + FUTURE_DAYS,
-    points: s.path.map(([d, p]) => [d + warmup, p] as PathPoint),
-    volatility: s.volatility ?? 1.0,
-    shadows: s.shadows?.map((x) => ({ ...x, day: x.day + warmup })),
-    gaps: s.gaps?.map((x) => ({ ...x, day: x.day + warmup })),
+    points: s.path.map(([d, p]) => [d + warmup, price(p)] as PathPoint),
+    volatility: (s.volatility ?? 1.0) * v.vol,
+    shadows: s.shadows?.map((x) => ({
+      day: x.day + warmup,
+      upper: x.upper === undefined ? undefined : x.upper * v.amp,
+      lower: x.lower === undefined ? undefined : x.lower * v.amp,
+    })),
+    gaps: s.gaps?.map((x) => ({ day: x.day + warmup, pct: x.pct * v.amp })),
     volumeBoost: s.volumeBoost?.map((x) => ({
       ...x,
       from: x.from + warmup,
@@ -453,6 +513,10 @@ export function buildScenario(s: ChartQuizScenario): BuiltScenario {
 
   return {
     scenario: s,
+    variant,
+    price,
+    hlines: (s.hlines ?? []).map((h) => ({ ...h, price: price(h.price) })),
+    explanation: s.explanation.map((t) => formatExplanation(t, price)),
     candles,
     ma5,
     ma25,
